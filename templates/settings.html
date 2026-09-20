@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% set active = 'settings' %}
+
+{% block content %}
+<div class="page-container">
+    <h2>Настройки</h2>
+    <p class="page-subtitle">Параметры работы приложения</p>
+
+    <div class="cards-grid" style="margin-top: 20px;">
+        <div class="info-card">
+            <div class="info-card-title">📦 Резервное копирование</div>
+            <div class="info-card-sub">Выгрузить базу расписания в JSON</div>
+            <button class="btn btn-primary" style="margin-top: 12px;" onclick="exportData()">
+                💾 Экспорт в JSON
+            </button>
+        </div>
+
+        <div class="info-card">
+            <div class="info-card-title">📥 Восстановление</div>
+            <div class="info-card-sub">Загрузить расписание из JSON (заменит текущее)</div>
+            <input type="file" id="import-file" accept=".json" style="margin-top: 10px; font-size: 11px;">
+            <button class="btn" style="margin-top: 10px;" onclick="importData()">
+                📤 Импорт из JSON
+            </button>
+        </div>
+
+        <div class="info-card">
+            <div class="info-card-title">🗑 Очистка данных</div>
+            <div class="info-card-sub">Удалить все занятия из расписания</div>
+            <button class="btn" style="margin-top: 12px; color: #dc2626;"
+                    onclick="clearLessons()">
+                Очистить расписание
+            </button>
+        </div>
+
+        <div class="info-card">
+            <div class="info-card-title">📜 История изменений</div>
+            <div class="info-card-sub">Полный журнал правок расписания</div>
+            <button class="btn btn-primary" style="margin-top: 12px;"
+                    onclick="window.location.href='/history'">
+                Открыть журнал
+            </button>
+        </div>
+    </div>
+
+    <div style="margin-top: 30px; padding: 20px; background: #fff; border-radius: 10px;">
+        <h3 style="font-size: 14px; margin-bottom: 10px;">ℹ️ Информация о системе</h3>
+        <table style="width: 100%; font-size: 12px;">
+            <tr><td style="padding: 6px 0; color: #64748b;">Backend:</td><td>Python Flask + SQLAlchemy</td></tr>
+            <tr><td style="padding: 6px 0; color: #64748b;">База данных:</td><td>SQLite (schedule.db)</td></tr>
+            <tr><td style="padding: 6px 0; color: #64748b;">Frontend:</td><td>HTML + CSS + Vanilla JS</td></tr>
+            <tr><td style="padding: 6px 0; color: #64748b;">Учебный период:</td><td>Осень 2025 / Весна 2026</td></tr>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+async function exportData() {
+    const [groups, teachers, subjects, classrooms, lessons] = await Promise.all([
+        fetch('/api/groups').then(r => r.json()),
+        fetch('/api/teachers').then(r => r.json()),
+        fetch('/api/subjects').then(r => r.json()),
+        fetch('/api/classrooms').then(r => r.json()),
+        fetch('/api/lessons').then(r => r.json()),
+    ]);
+    const dump = { groups, teachers, subjects, classrooms, lessons,
+                   exported_at: new Date().toISOString() };
+    const blob = new Blob([JSON.stringify(dump, null, 2)], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `schedule_backup_${new Date().toISOString().slice(0, 10)}.json`;
+    a.click();
+}
+
+async function importData() {
+    const file = document.getElementById('import-file').files[0];
+    if (!file) return alert('Выберите файл');
+    alert('Импорт из JSON — можно реализовать по аналогии с API. Функция зарезервирована.');
+}
+
+async function clearLessons() {
+    if (!confirm('Удалить все занятия из расписания? Действие необратимо.')) return;
+    const res = await fetch('/api/lessons/clear', { method: 'POST' });
+    if (res.ok) alert('Расписание очищено');
+}
+</script>
+{% endblock %}

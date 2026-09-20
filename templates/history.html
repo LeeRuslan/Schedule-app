@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% set active = 'history' %}
+
+{% block content %}
+<div class="page-container">
+    <h2>История изменений</h2>
+    <p class="page-subtitle">Журнал действий: кто, что и когда менял в расписании</p>
+    <div class="table-wrapper">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Дата и время</th>
+                    <th>Пользователь</th>
+                    <th>Действие</th>
+                    <th>Объект</th>
+                    <th>ID</th>
+                    <th>Детали</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for log in logs %}
+                <tr>
+                    <td>{{ log.timestamp.strftime('%d.%m.%Y %H:%M:%S') }}</td>
+                    <td>{{ log.user }}</td>
+                    <td>
+                        {% if log.action == 'create' %}<span class="badge badge-green">Создание</span>
+                        {% elif log.action == 'update' %}<span class="badge badge-blue">Изменение</span>
+                        {% elif log.action == 'delete' %}<span class="badge badge-red">Удаление</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ log.entity_type }}</td>
+                    <td>{{ log.entity_id }}</td>
+                    <td class="details-cell">{{ log.details }}</td>
+                </tr>
+                {% else %}
+                <tr><td colspan="6" class="empty-row">Записей пока нет</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

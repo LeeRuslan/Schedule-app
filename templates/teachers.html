@@ -1,0 +1,163 @@
+{% extends "base.html" %}
+{% set active = 'teachers' %}
+
+{% block content %}
+<div class="page-container">
+    <div class="page-header">
+        <div>
+            <h2>Преподаватели</h2>
+            <p class="page-subtitle">Список преподавателей и их дисциплин</p>
+        </div>
+        <button class="btn btn-primary" onclick="openTeacherModal()">+ Добавить преподавателя</button>
+    </div>
+
+    <div id="teachers-grid" class="cards-grid">
+        <div class="empty-row">Загрузка...</div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let allSubjectsCache = [];
+
+async function loadTeachersPage() {
+    const grid = document.getElementById('teachers-grid');
+    try {
+        const [teachersRes, subjectsRes] = await Promise.all([
+            fetch('/api/teachers'), fetch('/api/subjects')
+        ]);
+        const teachers = await teachersRes.json();
+        allSubjectsCache = await subjectsRes.json();
+
+        if (teachers.length === 0) {
+            grid.innerHTML = '<div class="empty-row">Нет преподавателей. Добавьте первого.</div>';
+            return;
+        }
+
+        grid.innerHTML = teachers.map(t => `
+            <div class="info-card" style="border-left: 4px solid ${t.color}">
+                <div class="info-card-title">${t.name}</div>
+                <div class="info-card-sub">Кратко: <b>${t.short_name || '—'}</b></div>
+                <div class="info-card-sub">Дисциплины: ${t.subjects.map(s => s.name).join(', ') || '<i>не назначены</i>'}</div>
+                <div style="margin-top: 10px; display: flex; gap: 6px;">
+                    <button class="btn" style="padding: 5px 10px; font-size: 11px;"
+                        onclick='openTeacherModal(${JSON.stringify(t).replace(/'/g, "&#39;")})'>✏️ Изменить</button>
+                    <button class="btn" style="padding: 5px 10px; font-size: 11px; color:#dc2626;"
+                        onclick="deleteTeacher(${t.id})">🗑 Удалить</button>
+                </div>
+            </div>
+        `).join('');
+    } catch (e) {
+        grid.innerHTML = '<div class="empty-row">Ошибка загрузки</div>';
+    }
+}
+
+function openTeacherModal(teacher = null) {
+    const isEdit = teacher !== null;
+    const colors = ['#3b82f6', '#ec4899', '#6366f1', '#a855f7', '#7c3aed',
+                    '#0ea5e9', '#ef4444', '#f59e0b', '#eab308', '#f43f5e', '#10b981'];
+    const currentSubjectIds = isEdit ? teacher.subjects.map(s => s.id) : [];
+
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay';
+    modal.innerHTML = `
+        <div class="modal" style="max-width: 520px;">
+            <h3>${isEdit ? 'Редактирование преподавателя' : 'Новый преподаватель'}</h3>
+            <div class="modal-field">
+                <label>ФИО полностью</label>
+                <input type="text" id="t-name" value="${isEdit ? teacher.name : ''}" placeholder="Иванов Сергей Владимирович">
+            </div>
+            <div class="modal-field">
+                <label>Краткое обозначение</label>
+                <input type="text" id="t-short" value="${isEdit ? (teacher.short_name || '') : ''}" placeholder="ИВ" maxlength="10">
+            </div>
+            <div class="modal-field">
+                <label>Цвет карточки</label>
+                <div id="color-picker" style="display: flex; gap: 6px; flex-wrap: wrap; margin-top: 4px;">
+                    ${colors.map(c => `
+                        <div class="color-swatch" data-color="${c}"
+                             style="width: 28px; height: 28px; border-radius: 50%; background: ${c};
+                                    cursor: pointer; border: 3px solid ${isEdit && teacher.color === c ? '#0f172a' : 'transparent'};">
+                        </div>`).join('')}
+                </div>
+            </div>
+            <div class="modal-field">
+                <label>Дисциплины</label>
+                <div style="max-height: 180px; overflow-y: auto; border: 1px solid #e2e8f0;
+                            border-radius: 6px; padding: 8px; margin-top: 4px;">
+                    ${allSubjectsCache.map(s => `
+                        <label style="display: flex; align-items: center; gap: 8px; padding: 4px; cursor: pointer;">
+                            <input type="checkbox" class="subject-check" value="${s.id}"
+                                ${currentSubjectIds.includes(s.id) ? 'checked' : ''}>
+                            <span>${s.name}</span>
+                        </label>
+                    `).join('') || '<div style="color:#94a3b8">Сначала создайте дисциплины</div>'}
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button class="btn" onclick="this.closest('.modal-overlay').remove()">Отмена</button>
+                <button class="btn btn-primary" onclick="saveTeacher(${isEdit ? teacher.id : 'null'})">Сохранить</button>
+            </div>
+        </div>`;
+    document.body.appendChild(modal);
+    modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
+
+    // Обработка выбора цвета
+    modal.querySelectorAll('.color-swatch').forEach(sw => {
+        sw.addEventListener('click', () => {
+            modal.querySelectorAll('.color-swatch').forEach(s => s.style.borderColor = 'transparent');
+            sw.style.borderColor = '#0f172a';
+        });
+    });
+
+    // Дефолтный цвет
+    if (isEdit) {
+        modal.querySelectorAll('.color-swatch').forEach(s => {
+            if (s.dataset.color === teacher.color) s.style.borderColor = '#0f172a';
+        });
+    } else {
+        modal.querySelector('.color-swatch').style.borderColor = '#0f172a';
+    }
+
+    setTimeout(() => document.getElementById('t-name')?.focus(), 50);
+}
+
+async function saveTeacher(id) {
+    const name = document.getElementById('t-name').value.trim();
+    if (!name) return alert('Введите ФИО');
+    const colorSwatch = document.querySelector('.color-swatch[style*="border-color: rgb(15, 23, 42)"]')
+                     || document.querySelector('.color-swatch[style*="border-color:#0f172a"]')
+                     || document.querySelector('.color-swatch');
+    const subjectIds = Array.from(document.querySelectorAll('.subject-check:checked'))
+                             .map(c => parseInt(c.value));
+    const data = {
+        name,
+        short_name: document.getElementById('t-short').value.trim() || null,
+        color: colorSwatch?.dataset.color || '#3b82f6',
+        subject_ids: subjectIds
+    };
+    const url = id ? `/api/teachers/${id}` : '/api/teachers';
+    const method = id ? 'PUT' : 'POST';
+    const res = await fetch(url, {
+        method, headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+    });
+    if (res.ok) {
+        document.querySelector('.modal-overlay')?.remove();
+        loadTeachersPage();
+    } else {
+        alert('Ошибка сохранения');
+    }
+}
+
+async function deleteTeacher(id) {
+    if (!confirm('Удалить преподавателя?')) return;
+    const res = await fetch(`/api/teachers/${id}`, { method: 'DELETE' });
+    if (res.ok) loadTeachersPage();
+    else alert('Не удалось удалить');
+}
+
+loadTeachersPage();
+</script>
+{% endblock %}
