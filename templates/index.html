@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% set active = 'schedule' %}
+
+{% block content %}
+<div class="schedule-controls">
+    <select id="period-select" class="control-select">
+        <option>Осень 2026</option>
+        <option>Лето 2027</option>
+    </select>
+    <select id="group-filter" class="control-select">
+        <option value="">Все группы</option>
+    </select>
+    <input type="text" id="search-groups" class="control-input" placeholder="Поиск по группам...">
+</div>
+
+<div class="schedule-wrapper">
+    <div class="schedule-grid" id="schedule-grid">
+        <div class="empty-state">Загрузка расписания...</div>
+    </div>
+
+    <aside class="teachers-panel">
+        <h3>Преподаватели</h3>
+        <input type="text" id="teacher-search" class="panel-search" placeholder="Поиск преподавателя...">
+        <div id="teachers-list" class="teachers-list"></div>
+
+        <div class="quick-actions">
+            <h4>Быстрые действия</h4>
+            <button class="quick-btn" onclick="clearAllSchedule()">
+                <span>🔗</span> Очистить расписание
+            </button>
+            <button class="quick-btn" onclick="deleteSelectedLesson()">
+                <span>🗑</span> Удалить занятие
+            </button>
+            <button class="quick-btn" onclick="copyDay()">
+                <span>📋</span> Копировать день
+            </button>
+        </div>
+    </aside>
+</div>
+{% endblock %}

@@ -1,0 +1,132 @@
+{% extends "base.html" %}
+{% set active = 'subjects' %}
+
+{% block content %}
+<div class="page-container">
+    <div class="page-header">
+        <div>
+            <h2>Дисциплины</h2>
+            <p class="page-subtitle">Учебные дисциплины и их преподаватели</p>
+        </div>
+        <button class="btn btn-primary" onclick="openSubjectModal()">+ Добавить дисциплину</button>
+    </div>
+
+    <div class="table-wrapper">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Название</th>
+                    <th>Сокращение</th>
+                    <th>Тип занятия</th>
+                    <th>Преподаватели</th>
+                    <th style="width: 160px;">Действия</th>
+                </tr>
+            </thead>
+            <tbody id="subjects-tbody">
+                <tr><td colspan="5" class="empty-row">Загрузка...</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+async function loadSubjects() {
+    const tbody = document.getElementById('subjects-tbody');
+    try {
+        const [subjectsRes, teachersRes] = await Promise.all([
+            fetch('/api/subjects'), fetch('/api/teachers')
+        ]);
+        const subjects = await subjectsRes.json();
+        const teachers = await teachersRes.json();
+
+        if (subjects.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5" class="empty-row">Нет дисциплин. Добавьте первую.</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = subjects.map(s => {
+            const related = teachers.filter(t => t.subjects.some(sub => sub.id === s.id))
+                                    .map(t => t.short_name || t.name).join(', ');
+            return `
+                <tr>
+                    <td><b>${s.name}</b></td>
+                    <td>${s.short_name || '—'}</td>
+                    <td>${s.lesson_type || '—'}</td>
+                    <td>${related || '<span style="color:#94a3b8">не назначен</span>'}</td>
+                    <td>
+                        <button class="btn-icon" onclick='openSubjectModal(${JSON.stringify(s)})'>✏️</button>
+                        <button class="btn-icon" onclick="deleteSubject(${s.id})">🗑</button>
+                    </td>
+                </tr>`;
+        }).join('');
+    } catch (e) {
+        tbody.innerHTML = '<tr><td colspan="5" class="empty-row">Ошибка загрузки</td></tr>';
+    }
+}
+
+function openSubjectModal(subject = null) {
+    const isEdit = subject !== null;
+    const types = ['Лекция', 'Практика', 'Лабораторная', 'Семинар', 'Экзамен'];
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay';
+    modal.innerHTML = `
+        <div class="modal">
+            <h3>${isEdit ? 'Редактирование дисциплины' : 'Новая дисциплина'}</h3>
+            <div class="modal-field">
+                <label>Название</label>
+                <input type="text" id="s-name" value="${isEdit ? subject.name : ''}" placeholder="Информатика">
+            </div>
+            <div class="modal-field">
+                <label>Сокращение</label>
+                <input type="text" id="s-short" value="${isEdit ? (subject.short_name || '') : ''}" placeholder="ИНФ" maxlength="10">
+            </div>
+            <div class="modal-field">
+                <label>Тип занятия</label>
+                <select id="s-type">
+                    ${types.map(t => `<option ${isEdit && subject.lesson_type === t ? 'selected' : ''}>${t}</option>`).join('')}
+                </select>
+            </div>
+            <div class="modal-actions">
+                <button class="btn" onclick="this.closest('.modal-overlay').remove()">Отмена</button>
+                <button class="btn btn-primary" onclick="saveSubject(${isEdit ? subject.id : 'null'})">Сохранить</button>
+            </div>
+        </div>`;
+    document.body.appendChild(modal);
+    modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
+    setTimeout(() => document.getElementById('s-name')?.focus(), 50);
+}
+
+async function saveSubject(id) {
+    const name = document.getElementById('s-name').value.trim();
+    if (!name) return alert('Введите название дисциплины');
+    const data = {
+        name,
+        short_name: document.getElementById('s-short').value.trim() || null,
+        lesson_type: document.getElementById('s-type').value
+    };
+    const url = id ? `/api/subjects/${id}` : '/api/subjects';
+    const method = id ? 'PUT' : 'POST';
+    const res = await fetch(url, {
+        method, headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+    });
+    if (res.ok) {
+        document.querySelector('.modal-overlay')?.remove();
+        loadSubjects();
+    } else {
+        alert('Ошибка сохранения');
+    }
+}
+
+async function deleteSubject(id) {
+    if (!confirm('Удалить дисциплину?')) return;
+    const res = await fetch(`/api/subjects/${id}`, { method: 'DELETE' });
+    if (res.ok) loadSubjects();
+    else alert('Не удалось удалить');
+}
+
+loadSubjects();
+</script>
+{% endblock %}

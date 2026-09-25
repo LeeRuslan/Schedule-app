@@ -1,0 +1,573 @@
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+    font-family: -apple-system, 'Segoe UI', Roboto, sans-serif;
+    background: #f0f4f8;
+    color: #1e293b;
+    font-size: 13px;
+}
+
+.app-container { display: flex; min-height: 100vh; }
+
+/* ============ Сайдбар ============ */
+.sidebar {
+    width: 240px;
+    background: #0f172a;
+    color: #e2e8f0;
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    height: 100vh;
+    z-index: 100;
+}
+
+.logo {
+    padding: 20px 20px 18px;
+    border-bottom: 1px solid #1e293b;
+}
+.logo h1 { font-size: 26px; font-weight: 800; color: #fff; letter-spacing: -0.5px; }
+.logo p { font-size: 9px; color: #94a3b8; margin-top: 6px; line-height: 1.4; }
+
+.nav { padding: 12px 0; flex: 1; }
+
+.nav-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 11px 20px;
+    color: #cbd5e1;
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 500;
+    transition: all 0.15s;
+    border-left: 3px solid transparent;
+}
+.nav-item:hover { background: #1e293b; color: #fff; }
+.nav-item.active {
+    background: #1e293b;
+    color: #fff;
+    border-left-color: #3b82f6;
+}
+.nav-icon { font-size: 16px; width: 20px; text-align: center; }
+
+.user-info {
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border-top: 1px solid #1e293b;
+}
+.avatar {
+    font-size: 18px;
+    background: #1e293b;
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.user-name { font-size: 12px; font-weight: 600; color: #fff; }
+.user-role { font-size: 10px; color: #94a3b8; margin-top: 2px; }
+
+/* ============ Основная область ============ */
+.main-content {
+    margin-left: 240px;
+    flex: 1;
+    padding: 16px 24px 40px;
+    min-width: 0;
+}
+
+.top-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+.top-left h2 { font-size: 20px; font-weight: 700; }
+.subtitle { font-size: 11px; color: #64748b; }
+
+.top-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+.btn {
+    padding: 8px 14px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    background: #fff;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 500;
+    color: #334155;
+    transition: all 0.15s;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+}
+.btn:hover { background: #f8fafc; border-color: #cbd5e1; }
+.btn-primary {
+    background: #3b82f6;
+    color: #fff;
+    border-color: #3b82f6;
+}
+.btn-primary:hover { background: #2563eb; border-color: #2563eb; }
+
+/* ============ Фильтры ============ */
+.schedule-controls {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 14px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+.control-select, .control-input {
+    padding: 8px 12px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    background: #fff;
+    font-size: 12px;
+    color: #334155;
+    min-width: 180px;
+    outline: none;
+}
+.control-input { min-width: 240px; }
+.control-select:focus, .control-input:focus { border-color: #3b82f6; }
+
+/* ============ Сетка расписания ============ */
+.schedule-wrapper {
+    display: grid;
+    grid-template-columns: 1fr 280px;
+    gap: 16px;
+    align-items: start;
+}
+
+.schedule-grid {
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(15,23,42,0.06), 0 4px 12px rgba(15,23,42,0.04);
+    overflow: auto;
+    max-height: calc(100vh - 180px);
+}
+
+.empty-state {
+    padding: 60px 20px;
+    text-align: center;
+    color: #94a3b8;
+    font-size: 14px;
+}
+
+.schedule-table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 1100px;
+}
+
+.schedule-table thead th {
+    background: #f8fafc;
+    padding: 10px 8px;
+    text-align: left;
+    font-size: 12px;
+    font-weight: 700;
+    color: #334155;
+    border-bottom: 1px solid #e2e8f0;
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    white-space: nowrap;
+}
+.schedule-table thead th small {
+    display: block;
+    font-weight: 400;
+    font-size: 10px;
+    color: #94a3b8;
+    margin-top: 2px;
+}
+.schedule-table thead th:first-child {
+    position: sticky;
+    left: 0;
+    z-index: 6;
+    background: #f8fafc;
+}
+
+.day-header-row td {
+    background: #f1f5f9;
+    padding: 6px 12px;
+    font-size: 11px;
+    font-weight: 700;
+    color: #475569;
+    letter-spacing: 0.5px;
+    border-top: 1px solid #e2e8f0;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.time-cell {
+    width: 110px;
+    background: #f8fafc;
+    padding: 10px 12px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #334155;
+    vertical-align: top;
+    border-right: 1px solid #e2e8f0;
+    border-bottom: 1px solid #e2e8f0;
+    position: sticky;
+    left: 0;
+    z-index: 3;
+}
+.time-cell small {
+    display: block;
+    font-weight: 400;
+    font-size: 10px;
+    color: #94a3b8;
+    margin-top: 3px;
+}
+
+.schedule-cell {
+    padding: 6px;
+    border-right: 1px solid #f1f5f9;
+    border-bottom: 1px solid #f1f5f9;
+    vertical-align: top;
+    min-width: 150px;
+    min-height: 60px;
+    transition: background 0.15s;
+}
+.schedule-cell:hover { background: #f8fafc; }
+.schedule-cell.drag-over { background: #dbeafe; outline: 2px dashed #3b82f6; outline-offset: -2px; }
+
+/* ============ Карточки занятий ============ */
+.lesson-card {
+    background: #fff;
+    border-radius: 8px;
+    padding: 8px 10px 8px 12px;
+    margin-bottom: 6px;
+    border-left: 4px solid #3b82f6;
+    box-shadow: 0 1px 2px rgba(15,23,42,0.06);
+    cursor: grab;
+    font-size: 11px;
+    line-height: 1.35;
+    transition: all 0.15s;
+    position: relative;
+}
+.lesson-card:hover {
+    box-shadow: 0 4px 10px rgba(15,23,42,0.12);
+    transform: translateY(-1px);
+}
+.lesson-card:active { cursor: grabbing; }
+.lesson-card.dragging { opacity: 0.4; }
+
+.lesson-card .teacher-short {
+    font-weight: 700;
+    font-size: 12px;
+    color: #1e293b;
+    margin-bottom: 3px;
+}
+.lesson-card .subject-name {
+    font-size: 11px;
+    color: #475569;
+    margin-bottom: 3px;
+    line-height: 1.25;
+}
+.lesson-card .weeks-info {
+    font-size: 10px;
+    color: #64748b;
+    margin-bottom: 2px;
+}
+.lesson-card .room {
+    font-size: 10px;
+    color: #3b82f6;
+    font-weight: 600;
+}
+
+/* ============ Панель преподавателей ============ */
+.teachers-panel {
+    background: #fff;
+    border-radius: 12px;
+    padding: 14px;
+    box-shadow: 0 1px 3px rgba(15,23,42,0.06), 0 4px 12px rgba(15,23,42,0.04);
+    max-height: calc(100vh - 180px);
+    overflow-y: auto;
+    position: sticky;
+    top: 16px;
+}
+.teachers-panel h3 {
+    font-size: 14px;
+    font-weight: 700;
+    margin-bottom: 10px;
+    color: #0f172a;
+}
+
+.panel-search {
+    width: 100%;
+    padding: 7px 10px;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    font-size: 11px;
+    margin-bottom: 10px;
+    outline: none;
+}
+.panel-search:focus { border-color: #3b82f6; }
+
+.teachers-list { display: flex; flex-direction: column; gap: 2px; }
+
+.teacher-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 7px 8px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.15s;
+    user-select: none;
+}
+.teacher-item:hover { background: #f1f5f9; }
+.teacher-item.expanded { background: #eff6ff; }
+
+.teacher-color {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+.teacher-info { flex: 1; min-width: 0; }
+.teacher-short-name {
+    font-size: 12px;
+    font-weight: 600;
+    color: #1e293b;
+}
+.teacher-subjects-preview {
+    font-size: 10px;
+    color: #94a3b8;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.subjects-list {
+    padding: 4px 0 6px 26px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+.subject-item {
+    font-size: 11px;
+    color: #475569;
+    padding: 4px 8px;
+    border-radius: 4px;
+    cursor: grab;
+    transition: background 0.15s;
+}
+.subject-item:hover { background: #e0e7ff; color: #1e40af; }
+
+/* ============ Быстрые действия ============ */
+.quick-actions {
+    margin-top: 16px;
+    padding-top: 14px;
+    border-top: 1px solid #e2e8f0;
+}
+.quick-actions h4 {
+    font-size: 12px;
+    font-weight: 700;
+    color: #334155;
+    margin-bottom: 8px;
+}
+
+.quick-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 8px 10px;
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    font-size: 11px;
+    color: #334155;
+    cursor: pointer;
+    margin-bottom: 5px;
+    transition: all 0.15s;
+    text-align: left;
+}
+.quick-btn:hover { background: #f8fafc; border-color: #cbd5e1; }
+.quick-btn span { font-size: 13px; }
+
+/* ============ Страницы (справочники) ============ */
+.page-container { max-width: 1100px; }
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+.page-header h2 { font-size: 20px; }
+.page-subtitle { color: #64748b; font-size: 12px; margin-bottom: 16px; }
+
+.cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 12px;
+}
+.info-card {
+    background: #fff;
+    border-radius: 10px;
+    padding: 14px;
+    box-shadow: 0 1px 3px rgba(15,23,42,0.06);
+}
+.info-card-title { font-weight: 600; margin-bottom: 6px; }
+.info-card-sub { font-size: 11px; color: #64748b; margin-bottom: 4px; }
+
+.table-wrapper {
+    background: #fff;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(15,23,42,0.06);
+}
+.data-table { width: 100%; border-collapse: collapse; }
+.data-table th, .data-table td {
+    padding: 10px 14px;
+    text-align: left;
+    border-bottom: 1px solid #f1f5f9;
+    font-size: 12px;
+}
+.data-table th {
+    background: #f8fafc;
+    font-weight: 600;
+    color: #475569;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+.data-table tr:hover { background: #f8fafc; }
+.details-cell {
+    max-width: 320px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-family: 'Consolas', monospace;
+    font-size: 10px;
+    color: #64748b;
+}
+.empty-row { text-align: center; color: #94a3b8; padding: 30px; }
+
+.badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 10px;
+    font-weight: 600;
+}
+.badge-green { background: #dcfce7; color: #166534; }
+.badge-blue { background: #dbeafe; color: #1e40af; }
+.badge-red { background: #fee2e2; color: #991b1b; }
+
+/* ============ Модальные окна ============ */
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(15,23,42,0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 20px;
+}
+.modal {
+    background: #fff;
+    border-radius: 12px;
+    padding: 22px;
+    width: 100%;
+    max-width: 460px;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.25);
+}
+.modal h3 { font-size: 16px; margin-bottom: 16px; }
+.modal-field { margin-bottom: 12px; }
+.modal-field label {
+    display: block;
+    font-size: 11px;
+    font-weight: 600;
+    color: #475569;
+    margin-bottom: 4px;
+}
+.modal-field input, .modal-field select {
+    width: 100%;
+    padding: 8px 10px;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    font-size: 12px;
+    outline: none;
+}
+.modal-field input:focus, .modal-field select:focus { border-color: #3b82f6; }
+.modal-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+    margin-top: 16px;
+}
+
+/* ============ Адаптив ============ */
+@media (max-width: 1200px) {
+    .schedule-wrapper { grid-template-columns: 1fr; }
+    .teachers-panel { position: static; max-height: none; }
+}
+
+/* Кнопки-иконки в таблицах */
+.btn-icon {
+    background: transparent;
+    border: 1px solid transparent;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 5px;
+    font-size: 13px;
+    transition: 0.15s;
+}
+.btn-icon:hover {
+    background: #f1f5f9;
+    border-color: #e2e8f0;
+}
+
+/* Свайпы цвета в модалке */
+.color-swatch {
+    transition: transform 0.15s;
+}
+.color-swatch:hover {
+    transform: scale(1.15);
+}
+
+/* Стилизованный checkbox */
+.subject-check {
+    width: 15px;
+    height: 15px;
+    cursor: pointer;
+}
+
+/* Модалка шире для формы преподавателя */
+.modal h3 + .modal-field label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+/* Подсветка найденных групп в шапке */
+.schedule-table thead th {
+    transition: background 0.2s;
+}
+
+/* Сообщение "ничего не найдено" */
+.empty-state {
+    padding: 20px;
+    text-align: center;
+    color: #94a3b8;
+    font-size: 12px;
+    background: #f8fafc;
+    border-radius: 8px;
+    margin-bottom: 10px;
+}
+
+.no-teachers-msg {
+    padding: 20px 10px;
+    text-align: center;
+    color: #94a3b8;
+    font-size: 11px;
+}

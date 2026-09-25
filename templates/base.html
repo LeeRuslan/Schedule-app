@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>НСМК — Расписание</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+<div class="app-container">
+
+    <!-- Сайдбар -->
+    <aside class="sidebar">
+        <div class="logo">
+            <h1>НСМК</h1>
+            <p>ГБПОУ НСО «Новосибирский строительно-монтажный колледж»</p>
+        </div>
+        <nav class="nav">
+            <a href="/" class="nav-item {% if active=='schedule' %}active{% endif %}">
+                <span class="nav-icon">📅</span> Расписание
+            </a>
+            <a href="/teachers" class="nav-item {% if active=='teachers' %}active{% endif %}">
+                <span class="nav-icon">👤</span> Преподаватели
+            </a>
+            <a href="/subjects" class="nav-item {% if active=='subjects' %}active{% endif %}">
+                <span class="nav-icon">📚</span> Дисциплины
+            </a>
+            <a href="/groups" class="nav-item {% if active=='groups' %}active{% endif %}">
+                <span class="nav-icon">👥</span> Группы
+            </a>
+            <a href="/classrooms" class="nav-item {% if active=='classrooms' %}active{% endif %}">
+                <span class="nav-icon">🏫</span> Кабинеты
+            </a>
+            <a href="/history" class="nav-item {% if active=='history' %}active{% endif %}">
+                <span class="nav-icon">📜</span> История изменений
+            </a>
+            <a href="/settings" class="nav-item {% if active=='settings' %}active{% endif %}">
+                <span class="nav-icon">⚙️</span> Настройки
+            </a>
+        </nav>
+        <div class="user-info">
+            <div class="avatar">👤</div>
+            <div>
+                <div class="user-name">Пользователь</div>
+                <div class="user-role">Составитель расписания</div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Основная область -->
+    <main class="main-content">
+        <header class="top-bar">
+            <div class="top-left">
+                <h2>Расписание</h2>
+                <span class="subtitle">ГБПОУ НСО «Новосибирский строительно-монтажный колледж»</span>
+            </div>
+            <div class="top-actions">
+                <button class="btn btn-primary" id="btn-new">+ Новый план</button>
+                <button class="btn" id="btn-save">💾 Сохранить</button>
+                <button class="btn" id="btn-clear">🗑 Очистить</button>
+                <button class="btn" id="btn-print">🖨 Печать</button>
+                <button class="btn" id="btn-settings">⚙️ Настройки</button>
+            </div>
+        </header>
+
+        {% block content %}{% endblock %}
+    </main>
+</div>
+
+<!-- Модальное окно -->
+<div id="modal-root"></div>
+
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+<script src="{{ url_for('static', filename='js/dragdrop.js') }}"></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

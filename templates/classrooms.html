@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+{% set active = 'classrooms' %}
+
+{% block content %}
+<div class="page-container">
+    <div class="page-header">
+        <div>
+            <h2>Кабинеты</h2>
+            <p class="page-subtitle">Аудиторный фонд колледжа</p>
+        </div>
+        <button class="btn btn-primary" onclick="openClassroomModal()">+ Добавить кабинет</button>
+    </div>
+
+    <div class="table-wrapper">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Номер</th>
+                    <th>Название / тип</th>
+                    <th>Количество мест</th>
+                    <th style="width: 160px;">Действия</th>
+                </tr>
+            </thead>
+            <tbody id="classrooms-tbody">
+                <tr><td colspan="4" class="empty-row">Загрузка...</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+async function loadClassrooms() {
+    const tbody = document.getElementById('classrooms-tbody');
+    try {
+        const res = await fetch('/api/classrooms');
+        const rooms = await res.json();
+        if (rooms.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="4" class="empty-row">Нет кабинетов. Добавьте первый.</td></tr>';
+            return;
+        }
+        tbody.innerHTML = rooms.map(c => `
+            <tr>
+                <td><b>${c.name}</b></td>
+                <td>${c.type || '—'}</td>
+                <td>${c.capacity ? c.capacity + ' мест' : '—'}</td>
+                <td>
+                    <button class="btn-icon" onclick='openClassroomModal(${JSON.stringify(c)})'>✏️</button>
+                    <button class="btn-icon" onclick="deleteClassroom(${c.id})">🗑</button>
+                </td>
+            </tr>
+        `).join('');
+    } catch (e) {
+        tbody.innerHTML = '<tr><td colspan="4" class="empty-row">Ошибка загрузки</td></tr>';
+    }
+}
+
+function openClassroomModal(room = null) {
+    const isEdit = room !== null;
+    const types = ['Учебный кабинет', 'Компьютерный класс', 'Лаборатория', 'Спортивный зал', 'Актовый зал'];
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay';
+    modal.innerHTML = `
+        <div class="modal">
+            <h3>${isEdit ? 'Редактирование кабинета' : 'Новый кабинет'}</h3>
+            <div class="modal-field">
+                <label>Номер кабинета</label>
+                <input type="text" id="c-name" value="${isEdit ? room.name : ''}" placeholder="305">
+            </div>
+            <div class="modal-field">
+                <label>Тип кабинета</label>
+                <select id="c-type">
+                    ${types.map(t => `<option ${isEdit && room.type === t ? 'selected' : ''}>${t}</option>`).join('')}
+                </select>
+            </div>
+            <div class="modal-field">
+                <label>Количество мест</label>
+                <input type="number" id="c-cap" value="${isEdit ? (room.capacity || '') : ''}" min="1" placeholder="25">
+            </div>
+            <div class="modal-actions">
+                <button class="btn" onclick="this.closest('.modal-overlay').remove()">Отмена</button>
+                <button class="btn btn-primary" onclick="saveClassroom(${isEdit ? room.id : 'null'})">Сохранить</button>
+            </div>
+        </div>`;
+    document.body.appendChild(modal);
+    modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
+    setTimeout(() => document.getElementById('c-name')?.focus(), 50);
+}
+
+async function saveClassroom(id) {
+    const name = document.getElementById('c-name').value.trim();
+    if (!name) return alert('Введите номер кабинета');
+    const data = {
+        name,
+        type: document.getElementById('c-type').value,
+        capacity: parseInt(document.getElementById('c-cap').value) || null
+    };
+    const url = id ? `/api/classrooms/${id}` : '/api/classrooms';
+    const method = id ? 'PUT' : 'POST';
+    const res = await fetch(url, {
+        method, headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+    });
+    if (res.ok) {
+        document.querySelector('.modal-overlay')?.remove();
+        loadClassrooms();
+    } else {
+        alert('Ошибка сохранения');
+    }
+}
+
+async function deleteClassroom(id) {
+    if (!confirm('Удалить кабинет?')) return;
+    const res = await fetch(`/api/classrooms/${id}`, { method: 'DELETE' });
+    if (res.ok) loadClassrooms();
+    else alert('Не удалось удалить');
+}
+
+loadClassrooms();
+</script>
+{% endblock %}
