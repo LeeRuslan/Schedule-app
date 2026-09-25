@@ -1,37 +1,22 @@
-# === Python ===
 __pycache__/
 *.py[cod]
-*$py.class
 *.so
 .Python
 build/
 dist/
 *.egg-info/
-.eggs/
-
-# === Виртуальное окружение ===
 venv/
 env/
-ENV/
 .venv/
-
-# === Flask / SQLAlchemy ===
 instance/
 *.db
 *.sqlite
 *.sqlite3
 schedule.db
-
-# === IDE ===
 .vscode/
 .idea/
 *.swp
-
-# === OS ===
 .DS_Store
 Thumbs.db
-desktop.ini
-
-# === Локальные настройки ===
 .env
 *.log
